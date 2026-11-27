@@ -1,0 +1,1797 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WordQuest - Vocabulary Game</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f1f4ff;
+    color: #24324a;
+    margin: 0;
+    padding: 20px;
+}
+
+.container { max-width: 1000px; margin: auto; }
+
+header {
+    background: linear-gradient(120deg, #4968e8, #8056d8);
+    color: white;
+    padding: 25px;
+    border-radius: 20px;
+    text-align: center;
+}
+
+header h1 { margin-top: 5px; }
+
+nav {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 15px;
+    background: #4968e8;
+    color: white;
+    font-weight: bold;
+    margin: 5px;
+}
+
+button:hover { opacity: 0.8; }
+button:disabled { cursor: not-allowed; opacity: 0.65; }
+
+.nav-btn { background: white; color: #4968e8; }
+.nav-btn.active { background: #4968e8; color: white; }
+
+.page { display: none; }
+.page.active { display: block; }
+
+.topics {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 15px;
+}
+
+.card {
+    background: white;
+    padding: 18px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 4px 12px #0001;
+}
+
+.vocabulary-image {
+    width: 150px;
+    height: 130px;
+    margin: 0 auto 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #f1f4ff;
+}
+
+.vocabulary-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-fallback {
+    width: 100%;
+    height: 100%;
+    color: #68758e;
+    font-size: 13px;
+    text-align: center;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    padding: 10px;
+}
+
+.word { font-size: 22px; font-weight: bold; margin: 8px; }
+.ipa { color: #8056d8; margin: 8px; }
+.meaning { color: #555; margin: 10px; }
+
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+}
+
+.menu-card {
+    background: white;
+    padding: 22px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 4px 12px #0001;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.menu-card:hover { transform: translateY(-3px); }
+.menu-icon { font-size: 45px; }
+.menu-card p { color: #68758e; line-height: 1.5; }
+
+.game {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    margin-top: 25px;
+    text-align: center;
+}
+
+.hidden { display: none !important; }
+
+.game-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+    max-width: 650px;
+    margin: 20px auto;
+}
+
+.game-options button {
+    background: #eef0ff;
+    color: #4659bf;
+    border: 1px solid #dfe4ff;
+}
+
+.game-options button.correct,
+.match-grid button.matched {
+    background: #d9f5e5;
+    color: green;
+}
+
+.game-options button.wrong {
+    background: #ffe1e5;
+    color: red;
+}
+
+.game-picture { margin: 20px; }
+.game-picture .vocabulary-image { margin: auto; }
+
+.game-picture img {
+    width: 140px;
+    height: 140px;
+    object-fit: contain;
+}
+
+.game-input {
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 17px;
+    max-width: 100%;
+}
+
+.feedback {
+    font-weight: bold;
+    margin: 15px;
+    min-height: 25px;
+}
+
+.match-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    max-width: 650px;
+    margin: 20px auto;
+}
+
+.match-grid > div {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.match-grid button {
+    background: #eef0ff;
+    color: #24324a;
+    min-height: 45px;
+    margin: 0;
+}
+
+.match-grid button.selected { outline: 3px solid #4968e8; }
+
+.word-grid {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 38px));
+    justify-content: center;
+    gap: 4px;
+    margin: 20px auto;
+}
+
+.word-grid button {
+    margin: 0;
+    padding: 8px 2px;
+    background: #eef0ff;
+    color: #4968e8;
+    min-width: 0;
+}
+
+.word-grid button.selected {
+    background: #4968e8;
+    color: white;
+}
+
+.word-grid button.found {
+    background: #d9f5e5;
+    color: green;
+}
+
+@media(max-width: 600px) {
+    body { padding: 10px; }
+    .word-grid { grid-template-columns: repeat(8, 1fr); }
+    .word-grid button { padding: 8px 2px; }
+    .game { padding: 12px; }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<header>
+    <h1>🧩 WordQuest</h1>
+    <p>Learn vocabulary through fun games!</p>
+    <h3>⭐ Points: <span id="points">0</span></h3>
+</header>
+
+<nav>
+    <button class="nav-btn active" onclick="showPage('home')">🏠 Main Menu</button>
+    <button class="nav-btn" onclick="showPage('vocabularyPage')">📚 Vocabulary</button>
+    <button class="nav-btn" onclick="showPage('gamesPage')">🎮 Mini Games</button>
+</nav>
+
+<section id="home" class="page active">
+    <h2>Welcome to WordQuest!</h2>
+    <p>Choose your learning activity.</p>
+
+    <div class="menu-grid">
+        <div class="menu-card" onclick="showPage('vocabularyPage')">
+            <div class="menu-icon">📚</div>
+            <h2>Vocabulary</h2>
+            <p>Learn English words, meanings and pronunciation.</p>
+            <button>Start Learning →</button>
+        </div>
+
+        <div class="menu-card" onclick="showPage('gamesPage')">
+            <div class="menu-icon">🎮</div>
+            <h2>Mini Games</h2>
+            <p>Practise vocabulary through fun activities.</p>
+            <button>Play Games →</button>
+        </div>
+    </div>
+</section>
+
+<section id="vocabularyPage" class="page">
+    <h2>📚 Vocabulary</h2>
+
+   <div class="topics">
+    <button onclick="showTopic('School Supplies')">✏️ School Supplies</button>
+    <button onclick="showTopic('Food and Drinks')">🍔 Food and Drinks</button>
+    <button onclick="showTopic('Animal')">🐶 Animals</button>
+    <button onclick="showTopic('Weather')">🌦️ Weather</button>
+    <button onclick="showTopic('Transportation')">🚗 Transportation</button>
+    <button onclick="showTopic('Fruits')">🍎 Fruits</button>
+    <button onclick="showTopic('Color')">🎨 Colors</button>
+</div>
+
+    <div class="cards" id="vocabulary"></div>
+</section>
+
+<section id="gamesPage" class="page">
+    <div id="gameMenu">
+        <h2>🎮 Mini Games</h2>
+        <p>Choose a game to practise your vocabulary!</p>
+
+        <div class="menu-grid">
+
+            <div class="menu-card" onclick="startGame('picture')">
+                <div class="menu-icon">🖼️</div>
+                <h3>Picture Quiz</h3>
+                <p>Look at pictures and choose the correct words.</p>
+                <button>Play →</button>
+            </div>
+
+            <div class="menu-card" onclick="startGame('missing')">
+                <div class="menu-icon">✏️</div>
+                <h3>Missing Letters</h3>
+                <p>Complete words with missing letters.</p>
+                <button>Play →</button>
+            </div>
+
+            <div class="menu-card" onclick="startGame('puzzle')">
+                <div class="menu-icon">🧩</div>
+                <h3>Word Puzzle</h3>
+                <p>Arrange letters to make English words.</p>
+                <button>Play →</button>
+            </div>
+
+            <div class="menu-card" onclick="startGame('choice')">
+                <div class="menu-icon">❓</div>
+                <h3>Multiple Choice</h3>
+                <p>Choose the correct English answer.</p>
+                <button>Play →</button>
+            </div>
+
+            <div class="menu-card" onclick="startGame('matching')">
+                <div class="menu-icon">🔗</div>
+                <h3>Matching</h3>
+                <p>Match English words with Vietnamese meanings.</p>
+                <button>Play →</button>
+            </div>
+
+            <div class="menu-card" onclick="startGame('wordsearch')">
+                <div class="menu-icon">🔎</div>
+                <h3>Word Search</h3>
+                <p>Find hidden words in the letter grid.</p>
+                <button>Play →</button>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="gameArea" class="hidden">
+        <button onclick="backToGames()">← Back to Games</button>
+        <div class="game" id="gameContent"></div>
+    </div>
+</section>
+
+</div>
+
+<script>
+
+// ==========================================
+// 1. IMAGE DATABASE - SEPARATE BY TOPIC
+// ==========================================
+
+const FIXED_IMAGES = {
+
+    Color: {
+        Red: "https://placehold.co/400x300/FF0000/FF0000.png",
+        Blue: "https://placehold.co/400x300/0000FF/0000FF.png",
+        Yellow: "https://placehold.co/400x300/FFFF00/FFFF00.png",
+        Green: "https://placehold.co/400x300/008000/008000.png",
+        Black: "https://placehold.co/400x300/000000/000000.png",
+        White: "https://placehold.co/400x300/FFFFFF/FFFFFF.png",
+        Pink: "https://placehold.co/400x300/FFC0CB/FFC0CB.png",
+        Purple: "https://placehold.co/400x300/800080/800080.png",
+        Orange: "https://placehold.co/400x300/FFA500/FFA500.png",
+        Brown: "https://placehold.co/400x300/8B4513/8B4513.png",
+        Gray: "https://placehold.co/400x300/808080/808080.png",
+    },
+
+
+Animal: {
+    Cat: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&h=300&fit=crop",
+    Dog: "https://images.unsplash.com/photo-1668036268102-c6f8829e6adf?w=400&h=300&fit=crop",
+    Bird: "https://images.unsplash.com/photo-1480044965905-02098d419e96?w=400&h=300&fit=crop",
+    Fish: "https://upload.wikimedia.org/wikipedia/commons/6/63/Discus_-_fish.jpg",
+    Duck: "https://images.unsplash.com/photo-1789142063471-b1b3ba0b9028?w=400&h=300&fit=crop",
+    Cow: "https://images.unsplash.com/photo-1651490542640-986b9e767d22?w=400&h=300&fit=crop",
+    Pig: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=400&h=300&fit=crop",
+    Horse: "https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=400&h=300&fit=crop",
+    Sheep: "https://images.unsplash.com/photo-1785950066692-86f3c789e3c5?w=400&h=300&fit=crop",
+    Rabbit: "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=400&h=300&fit=crop",
+    Chicken: "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=400&h=300&fit=crop",
+    Lion: "https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=400&h=300&fit=crop",
+    Tiger: "https://images.unsplash.com/photo-1561731216-c3a4d99437d5?w=400&h=300&fit=crop",
+    Monkey: "https://images.unsplash.com/photo-1741387863183-16ba5d9e379b?w=400&h=300&fit=crop",
+    Elephant: "https://images.unsplash.com/photo-1631646109235-0d6b33cb3034?w=400&h=300&fit=crop",
+    Giraffe: "https://images.unsplash.com/photo-1731994634956-94a42f6b6290?w=400&h=300&fit=crop",
+    Zebra: "https://images.unsplash.com/photo-1714405849766-409acbdeaf7d?w=400&h=300&fit=crop",
+    Bear: "https://images.unsplash.com/photo-1727466613973-d385db609608?w=400&h=300&fit=crop",
+    Dolphin: "https://images.unsplash.com/photo-1607153333879-c174d265f1d2?w=400&h=300&fit=crop",
+    Crocodile: "https://images.unsplash.com/photo-1721823607915-a6863aede887?w=400&h=300&fit=crop",
+    Turtle: "https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?w=400&h=300&fit=crop",
+    Penguin: "https://images.unsplash.com/photo-1753256059077-8c435a568153?w=400&h=300&fit=crop",
+    Kangaroo: "https://images.unsplash.com/photo-1736381429117-28d9728db95a?w=400&h=300&fit=crop",
+},
+
+"School Supplies": {
+    Pencil: "https://assets.lummi.ai/assets/QmczVwG95H1JDyabHKhDPFKKmtjXu64EnApk4YczQnwsyg?auto=format&w=400",
+    Pen: "https://dcdn.mitiendanube.com/stores/004/009/176/products/fotos-lapiceros-16-beb6f6ed6e45a168c317235861239355-1024-1024.jpeg",
+    Crayon: "https://images.unsplash.com/photo-1520881685182-f4f6a103adf5?w=400&h=300&fit=crop",
+    Book: "https://images.unsplash.com/photo-1721134555977-81f5aeb8fbed?w=400&h=300&fit=crop",
+    Notebook: "https://images.unsplash.com/photo-1531346878377-a5be20888e57?w=400&h=300&fit=crop",
+    Backpack: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=300&fit=crop",
+    Eraser: "https://images.unsplash.com/photo-1667532447990-51c6704ef358?auto=format&fit=crop&w=400",
+    "Ruler": "https://commons.wikimedia.org/wiki/Special:FilePath/Ruler.jpg",
+    Schoolbag: "https://commons.wikimedia.org/wiki/Special:FilePath/A_schoolbag_of_a_student_of_Chu-Jen_Junior_High_School_is_full_of_books.jpg",
+    Scissors: "https://commons.wikimedia.org/wiki/Special:FilePath/Pair%20of%20scissors%20on%20white%20background.jpg",
+    Sharpener: "https://upload.wikimedia.org/wikipedia/commons/6/6d/KUM_Sharpener.jpg",
+    Scissors: "https://upload.wikimedia.org/wikipedia/commons/7/7d/Pair_of_scissors_on_white_background.jpg",
+    Blackboard: "https://upload.wikimedia.org/wikipedia/commons/1/1a/BlankChalkboard.JPG",
+"Pencil case": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Trousse_-_1.jpg",
+Desk: "https://upload.wikimedia.org/wikipedia/commons/1/1a/Escritorio%2C_mueble.JPG",
+Glue: "https://upload.wikimedia.org/wikipedia/commons/5/5d/School_glue.JPG",
+
+},
+
+Transportation: {
+    Car: "https://images.unsplash.com/photo-1738748140421-041c1257e57e?w=400&h=300&fit=crop",
+    Bus: "https://www.busplaner.de/sites/default/files/public/styles/_bilder_uebersicht_mobile_900x600_/public/images-news-teaser/260225-a7409791-bd.jpg",
+    Bicycle: "https://images.unsplash.com/photo-1651563075030-a2f5b65f6776?w=400&h=300&fit=crop",
+    Motorcycle: "https://www.drivolino.de/img.php?src=https%3A%2F%2Fwww.drivolino.de%2Fres%2Fmasters-vehicles%2F117881%2F02d29e28f718c995c2cedf9d838d347d.a2.jpg&w=606",
+    Airplane: "https://images.unsplash.com/photo-1682003784256-d370151fe213?w=400&h=300&fit=crop",
+    Boat: "https://images.unsplash.com/photo-1646569278939-9bf4a021a97b?w=400&h=300&fit=crop",
+    Ship: "https://images.unsplash.com/photo-1683241135627-d8fcf306a9d3?w=400&h=300&fit=crop",
+    Taxi: "https://ik.imagekit.io/tvlk/blog/2022/10/05-Taksi-2065450433-FOTMA_Shutterstock.com_-1024x683.jpg?tr=q-70%2Cw-625%2Cdpr-2",
+    Helicopter: "https://images.wallpaperscraft.com/image/single/helicopter_yellow_asphalt_543553_2560x1440.jpg",
+    Truck: "https://www.daf.pt/-/media/images/daf-stories/in-action/2023/daf-camion-03.jpg?hash=7AB19BC51784CD473E28CBE438F4D657&mw=1200&rev=dd8769ebad3341ab9d51e24d8509ace8",
+    Train: "https://upload.wikimedia.org/wikipedia/commons/8/8c/First_Train_Set_for_Brightline%21.jpg",
+    Van: "https://vanlifetrader.com/wp-content/uploads/2024/06/Pre-Owned-Sprinter-1_websize-1536x1024.jpg",
+    Subway: "https://www.metropolitan.bg/assets/cache_image/assets/resourceimages/1126/9-20_1200x675_edd.jpg",
+    Ambulance: "https://m.persian.emergencyfiretrucks.com/photo/pd106487372-medical_first_aid_ambulance_car_for_emerfgency_patient_care_transport.jpg",
+},
+
+
+Fruits: {
+    Apple: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&h=300&fit=crop",
+    Banana: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&h=300&fit=crop",
+    Orange: "https://images.unsplash.com/photo-1547514701-42782101795e?w=400&h=300&fit=crop",
+    Watermelon: "https://images.unsplash.com/photo-1563114773-84221bd62daa?w=400&h=300&fit=crop",
+    Strawberry: "https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=400&h=300&fit=crop",
+    Mango: "https://images.unsplash.com/photo-1553279768-865429fa0078?w=400&h=300&fit=crop",
+    Pineapple: "https://images.cdn.smartandfinal.com/zoom/5304afdf6e0e8747d862cd20bcfb49526e6fab94.jpg",
+    Grape: "https://images.unsplash.com/photo-1537640538966-79f369143f8f?w=400&h=300&fit=crop",
+    Pear: "https://m.media-amazon.com/images/S/assets.wholefoodsmarket.com/PIE/product/56e77f2ff6e8791100e80002_365_-d-anjou-pear.1._TTD_._SR600%2C600_._QL100_.jpg",
+    Peach: "https://images.unsplash.com/photo-1517355352485-3c18847c2f7d?w=400&h=300&fit=crop",
+   Coconut: "https://images.rawpixel.com/image_800/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI2LTAyL3NyLWltYWdlLTIzMDIyMDI2LWt1MDA3LXMtMDkxXzEuanBn.jpg",
+    Papaya: "https://images.unsplash.com/photo-1517282009859-f000ec3b26fe?w=400&h=300&fit=crop",
+    Cherry: "https://images.unsplash.com/photo-1528821128474-27f963b062bf?w=400&h=300&fit=crop",
+    Lemon: "https://images.unsplash.com/photo-1590502593747-42a996133562?w=400&h=300&fit=crop",
+    Kiwi: "https://images.unsplash.com/photo-1585059895524-72359e06133a?w=400&h=300&fit=crop",
+    Avocado: "https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?w=400&h=300&fit=crop",
+    Guava: "https://images.unsplash.com/photo-1536511132770-e5058c5e8c46?w=400&h=300&fit=crop",
+    DragonFruit: "https://images.unsplash.com/photo-1527325678964-54921661f888?w=400&h=300&fit=crop",
+    Lychee: "https://images.unsplash.com/photo-1622597467836-f3285f2131b8?w=400&h=300&fit=crop",
+    Plum: "https://images.unsplash.com/photo-1595743825637-cdafc8ad4173?w=400&h=300&fit=crop"
+},
+
+Weather: {
+    Sunny: "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji/color/618x618/2600.png",
+    Rainy: "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji/color/618x618/1F327.png",
+    Cloudy: "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji/color/618x618/2601.png",
+    Windy: "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji/color/618x618/1F32C.png",
+    Snowy: "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji/color/618x618/1F328.png",
+    Stormy: "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji/color/618x618/26C8.png",
+    Foggy: "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji/color/618x618/1F32B.png",
+    Hot: "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji/color/618x618/1F975.png",
+    Cold: "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji/color/618x618/1F976.png",
+    Warm: "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji/color/618x618/1F324.png",
+    Cool: "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji/color/618x618/1F343.png",
+    Dry: "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji/color/618x618/1F3DC.png",
+    Wet: "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji/color/618x618/1F4A7.png",
+    Rainbow: "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji/color/618x618/1F308.png",
+    Thunder: "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji/color/618x618/26C8.png",
+    Lightning: "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji/color/618x618/26A1.png",
+    Drizzle: "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji/color/618x618/1F326.png",
+    Breeze: "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji/color/618x618/1F32C.png",
+    Hail: "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji/color/618x618/1F9CA.png",
+    Freezing: "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji/color/618x618/2744.png"
+},
+
+
+"Food and Drinks": {
+    Cake: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400&h=300&fit=crop",
+
+    Bread: "https://images.unsplash.com/photo-1549931319-a545dcf3bc73?w=400&h=300&fit=crop",
+    Egg: "https://images.unsplash.com/photo-1506976785307-8732e854ad03?w=400&h=300&fit=crop",
+    Rice: "https://images.unsplash.com/photo-1516684732162-798a0062be99?w=400&h=300&fit=crop",
+
+    Cheese: "https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=400&h=300&fit=crop",
+    Pizza: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop",
+    Noodles: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&h=300&fit=crop",
+    Carrot: "https://images.unsplash.com/photo-1445282768818-728615cc910a?w=400&h=300&fit=crop",
+    Potato: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400&h=300&fit=crop",
+    Sandwich: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=400&h=300&fit=crop",
+    Hamburger: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop",
+
+    "Hot dog": "https://images.unsplash.com/photo-1768250708131-23da8d1cb5ad?w=400&h=300&fit=crop",
+    "French fries": "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400&h=300&fit=crop",
+    Chicken: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=400&h=300&fit=crop",
+    Meat: "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=400&h=300&fit=crop",
+    Sausage: "https://images.unsplash.com/photo-1624772398066-98584aa2f214?w=400&h=300&fit=crop",
+    Soup: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400&h=300&fit=crop",
+    Salad: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop",
+
+    Cookie: "https://pedidosonline.sigfredomelchor.com/images/503/images/2025/scoops%20coookie/noticias%20copia%20cookie.png",
+    "Ice cream": "https://images.unsplash.com/photo-1560008581-09826d1de69e?w=400&h=300&fit=crop",
+    Chocolate: "https://images.unsplash.com/photo-1511381939415-e44015466834?w=400&h=300&fit=crop",
+    Candy: "https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=400&h=300&fit=crop",
+
+    Donut: "https://images.pexels.com/photos/36976601/pexels-photo-36976601/free-photo-of-chocolate-donut-with-nuts-on-white-background.jpeg?auto=compress&cs=tinysrgb&w=400",
+
+    Pancake: "https://images.unsplash.com/photo-1528207776546-365bb710ee93?w=400&h=300&fit=crop",
+    Popcorn: "https://images.unsplash.com/photo-1578849278619-e73505e9610f?w=400&h=300&fit=crop",
+
+    Water: "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400&h=300&fit=crop",
+    Juice: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=400&h=300&fit=crop",
+    Tea: "https://www.everydaypeoplecoffeeandtea.com/cdn/shop/files/BKE595_Carousel_1.jpg?v=1760024790&width=480",
+    Lemonade: "https://imagemo.fsn1.your-objectstorage.com/images/2024/05/16/thumb_6645cc4a960921715850314.png",
+    "Orange juice": "https://images.unsplash.com/photo-1613478223719-2ab802602423?w=400&h=300&fit=crop",
+    "Apple juice": "https://images.unsplash.com/photo-1668236513754-9be63d18970a?w=400&h=300&fit=crop",
+    Milkshake: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=400&h=300&fit=crop",
+    Coffee: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=300&fit=crop",
+    Yogurt: "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400&h=300&fit=crop",
+    Soda: "https://images.unsplash.com/photo-1554866585-cd94860890b7?w=400&h=300&fit=crop",
+    "Coconut water": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&h=300&fit=crop",
+    Smoothie: "https://images.unsplash.com/photo-1505252585461-04db1eb84625?w=400&h=300&fit=crop",
+    "Strawberry juice": "https://images.unsplash.com/photo-1553530666-ba11a7da3888?w=400&h=300&fit=crop",
+    "Watermelon juice": "https://images.rawpixel.com/image_800/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI2LTAxL3Jhd3BpeGVsX29mZmljZV8zMV91bHRyYS1yZWFsaXN0aWNfc3RvY2tfcGhvdG9fb2Zfd2F0ZXJtZWxvbl9qdV9jMmU5ZGU3Mi02YmFjLTQ5ZDUtYjI4Ni0zYmMwNGZiMjRmYmRfMS5qcGc.jpg",
+},
+
+};
+
+
+// ==========================================
+// 1.1. IMAGE SEARCH TERMS
+// ==========================================
+
+const IMAGE_SEARCH_TERMS = {
+
+    Color: {
+        Rainbow: "rainbow sky"
+    },
+
+    Animal: {
+        Cat: "cat animal",
+        Dog: "dog animal",
+        Bird: "bird animal",
+        Fish: "fish animal",
+        Duck: "duck animal",
+        Cow: "cow animal",
+        Pig: "pig animal",
+        Horse: "horse animal",
+        Sheep: "sheep animal",
+        Rabbit: "rabbit animal",
+        Chicken: "chicken animal",
+        Lion: "lion animal",
+        Tiger: "tiger animal",
+        Monkey: "monkey animal",
+        Elephant: "elephant animal"
+    },
+
+    Food: {
+        Apple: "apple fruit",
+        Banana: "banana fruit",
+        Orange: "orange fruit",
+        Grape: "grapes fruit",
+        Mango: "mango fruit",
+        Cake: "cake dessert",
+        Bread: "bread loaf",
+        Egg: "chicken egg",
+        Rice: "cooked rice",
+        Cheese: "cheese food",
+        Pizza: "pizza food",
+        Noodles: "noodles food",
+        Carrot: "carrot vegetable",
+        Potato: "potato vegetable",
+        Sandwich: "sandwich food",
+        Hamburger: "hamburger food",
+        "Hot dog": "hot dog food",
+        "French fries": "french fries",
+        Chicken: "cooked chicken meat",
+        Meat: "meat food",
+        Sausage: "sausage food",
+        Soup: "soup bowl",
+        Salad: "vegetable salad",
+        Cookie: "cookie",
+        "Ice cream": "ice cream",
+        Chocolate: "chocolate food",
+        Candy: "candy sweets",
+        Donut: "donut",
+        Pancake: "pancakes",
+        Popcorn: "popcorn",
+        Watermelon: "watermelon fruit",
+        Strawberry: "strawberry fruit",
+        Pineapple: "pineapple fruit"
+    },
+
+    Drink: {
+        Water: "glass of water",
+        Juice: "fruit juice glass",
+        Tea: "cup of tea",
+        Lemonade: "lemonade drink",
+        "Orange juice": "orange juice glass",
+        "Apple juice": "apple juice glass",
+        Milkshake: "milkshake drink",
+        Coffee: "cup of coffee",
+        Yogurt: "yogurt bowl",
+        Wine: "glass of wine",
+        Soda: "soda drink",
+        "Coconut water": "coconut water",
+        Smoothie: "fruit smoothie",
+        "Strawberry juice": "strawberry juice",
+        "Watermelon juice": "watermelon juice"
+    }
+};
+
+
+// Unique image locks for every topic and word.
+
+const IMAGE_LOCKS = {
+    Color: {},
+    Animal: {},
+    Food: {},
+    Drink: {},
+    "School Supplies": {},
+    "Food and Drinks": {},
+    Weather: {},
+    Transportation: {},
+    Fruits: {}
+};
+
+let lockNumber = 100;
+
+function makeWord(topic, word, ipa, meaning) {
+
+    if (!IMAGE_LOCKS[topic][word]) {
+        IMAGE_LOCKS[topic][word] = lockNumber++;
+    }
+
+    const keyword =
+        IMAGE_SEARCH_TERMS[topic]?.[word] || word;
+
+    const imageUrl =
+        FIXED_IMAGES[topic]?.[word] ||
+        "https://loremflickr.com/400/300/" +
+        encodeURIComponent(keyword) +
+        "?lock=" + IMAGE_LOCKS[topic][word];
+
+    return {
+        topic,
+        word,
+        ipa,
+        meaning,
+        imageUrl
+    };
+}
+
+
+// ==========================================
+// 2. VOCABULARY DATABASE
+// ==========================================
+
+const vocabulary = {
+
+    Color: [
+        makeWord("Color", "Red", "/red/", "Màu đỏ"),
+        makeWord("Color", "Blue", "/bluː/", "Màu xanh dương"),
+        makeWord("Color", "Yellow", "/ˈjel.oʊ/", "Màu vàng"),
+        makeWord("Color", "Green", "/ɡriːn/", "Màu xanh lá"),
+        makeWord("Color", "Black", "/blæk/", "Màu đen"),
+        makeWord("Color", "White", "/waɪt/", "Màu trắng"),
+        makeWord("Color", "Pink", "/pɪŋk/", "Màu hồng"),
+        makeWord("Color", "Purple", "/ˈpɝː.pəl/", "Màu tím"),
+        makeWord("Color", "Orange", "/ˈɔːr.ɪndʒ/", "Màu cam"),
+        makeWord("Color", "Brown", "/braʊn/", "Màu nâu"),
+        makeWord("Color", "Gray", "/ɡreɪ/", "Màu xám"),
+    ],
+
+    Animal: [
+        makeWord("Animal", "Cat", "/kæt/", "Con mèo"),
+        makeWord("Animal", "Dog", "/dɔːɡ/", "Con chó"),
+        makeWord("Animal", "Bird", "/bɝːd/", "Con chim"),
+        makeWord("Animal", "Fish", "/fɪʃ/", "Con cá"),
+        makeWord("Animal", "Duck", "/dʌk/", "Con vịt"),
+        makeWord("Animal", "Cow", "/kaʊ/", "Con bò"),
+        makeWord("Animal", "Pig", "/pɪɡ/", "Con lợn"),
+        makeWord("Animal", "Horse", "/hɔːrs/", "Con ngựa"),
+        makeWord("Animal", "Sheep", "/ʃiːp/", "Con cừu"),
+        makeWord("Animal", "Rabbit", "/ˈræb.ɪt/", "Con thỏ"),
+        makeWord("Animal", "Chicken", "/ˈtʃɪk.ɪn/", "Con gà"),
+        makeWord("Animal", "Lion", "/ˈlaɪ.ən/", "Sư tử"),
+        makeWord("Animal", "Tiger", "/ˈtaɪ.ɡɚ/", "Con hổ"),
+        makeWord("Animal", "Monkey", "/ˈmʌŋ.ki/", "Con khỉ"),
+        makeWord("Animal", "Elephant", "/ˈel.ə.fənt/", "Con voi"),
+        makeWord("Animal", "Giraffe", "/dʒəˈræf/", "Hươu cao cổ"),
+        makeWord("Animal", "Zebra", "/ˈziːbrə/", "Ngựa vằn"),
+        makeWord("Animal", "Bear", "/ber/", "Gấu"),
+        makeWord("Animal", "Dolphin", "/ˈdɑːlfɪn/", "Cá heo"),
+        makeWord("Animal", "Penguin", "/ˈpeŋɡwɪn/", "Chim cánh cụt"),
+        makeWord("Animal", "Crocodile", "/ˈkrɑːkədaɪl/", "Cá sấu"),
+        makeWord("Animal", "Kangaroo", "/ˌkæŋɡəˈruː/", "Chuột túi"),
+        makeWord("Animal", "Turtle", "/ˈtɜːrtəl/", "Rùa")
+    ],
+
+"School Supplies": [
+    makeWord("School Supplies", "Pencil", "/ˈpensəl/", "Bút chì"),
+    makeWord("School Supplies", "Pen", "/pen/", "Bút mực"),
+    makeWord("School Supplies", "Eraser", "/ɪˈreɪsər/", "Cục tẩy"),
+    makeWord("School Supplies", "Ruler", "/ˈruːlər/", "Thước kẻ"),
+    makeWord("School Supplies", "Notebook", "/ˈnoʊtbʊk/", "Quyển vở"),
+    makeWord("School Supplies", "Backpack", "/ˈbækpæk/", "Ba lô"),
+    makeWord("School Supplies", "Schoolbag", "/ˈskuːlbæɡ/", "Cặp sách"),
+    makeWord("School Supplies", "Crayon", "/ˈkreɪɑːn/", "Bút sáp màu"),
+    makeWord("School Supplies", "Scissors", "/ˈsɪzərz/", "Cái kéo"),
+    makeWord("School Supplies", "Sharpener", "/ˈʃɑːrpənər/", "Đồ gọt bút chì"),
+    makeWord("School Supplies", "Book", "/bʊk/", "Quyển sách"),
+    makeWord("School Supplies", "Pencil case", "/ˈpensəl keɪs/", "Hộp bút"),
+    makeWord("School Supplies", "Glue", "/ɡluː/", "Keo dán"),
+    makeWord("School Supplies", "Blackboard", "/ˈblækbɔːrd/", "Bảng đen"),
+    makeWord("School Supplies", "Desk", "/desk/", "Bàn học"),
+],
+
+"Food and Drinks": [
+    makeWord("Food and Drinks", "Cake", "/keɪk/", "Bánh ngọt"),
+    makeWord("Food and Drinks", "Bread", "/bred/", "Bánh mì"),
+    makeWord("Food and Drinks", "Egg", "/eɡ/", "Trứng"),
+    makeWord("Food and Drinks", "Rice", "/raɪs/", "Cơm, gạo"),
+    makeWord("Food and Drinks", "Cheese", "/tʃiːz/", "Phô mai"),
+    makeWord("Food and Drinks", "Pizza", "/ˈpiːt.sə/", "Bánh pizza"),
+    makeWord("Food and Drinks", "Noodles", "/ˈnuː.dəlz/", "Mì"),
+    makeWord("Food and Drinks", "Carrot", "/ˈker.ət/", "Cà rốt"),
+    makeWord("Food and Drinks", "Potato", "/pəˈteɪ.toʊ/", "Khoai tây"),
+    makeWord("Food and Drinks", "Sandwich", "/ˈsænd.wɪtʃ/", "Bánh mì kẹp"),
+    makeWord("Food and Drinks", "Hamburger", "/ˈhæmˌbɝː.ɡɚ/", "Bánh hamburger"),
+    makeWord("Food and Drinks", "Hot dog", "/ˈhɑːt ˌdɔːɡ/", "Xúc xích kẹp bánh mì"),
+    makeWord("Food and Drinks", "French fries", "/ˌfrentʃ ˈfraɪz/", "Khoai tây chiên"),
+    makeWord("Food and Drinks", "Chicken", "/ˈtʃɪk.ɪn/", "Thịt gà"),
+    makeWord("Food and Drinks", "Meat", "/miːt/", "Thịt"),
+    makeWord("Food and Drinks", "Sausage", "/ˈsɑː.sɪdʒ/", "Xúc xích"),
+    makeWord("Food and Drinks", "Soup", "/suːp/", "Súp"),
+    makeWord("Food and Drinks", "Salad", "/ˈsæl.əd/", "Rau trộn"),
+    makeWord("Food and Drinks", "Cookie", "/ˈkʊk.i/", "Bánh quy"),
+    makeWord("Food and Drinks", "Ice cream", "/ˈaɪs ˌkriːm/", "Kem"),
+    makeWord("Food and Drinks", "Chocolate", "/ˈtʃɑːk.lət/", "Sô-cô-la"),
+    makeWord("Food and Drinks", "Candy", "/ˈkæn.di/", "Kẹo"),
+    makeWord("Food and Drinks", "Donut", "/ˈdoʊ.nʌt/", "Bánh vòng"),
+    makeWord("Food and Drinks", "Pancake", "/ˈpæn.keɪk/", "Bánh kếp"),
+    makeWord("Food and Drinks", "Popcorn", "/ˈpɑːp.kɔːrn/", "Bắp rang"),
+    makeWord("Food and Drinks", "Water", "/ˈwɑː.t̬ɚ/", "Nước lọc"),
+    makeWord("Food and Drinks", "Juice", "/dʒuːs/", "Nước ép"),
+    makeWord("Food and Drinks", "Tea", "/tiː/", "Trà"),
+    makeWord("Food and Drinks", "Lemonade", "/ˌlem.əˈneɪd/", "Nước chanh"),
+    makeWord("Food and Drinks", "Orange juice", "/ˈɔːr.ɪndʒ ˌdʒuːs/", "Nước cam"),
+    makeWord("Food and Drinks", "Apple juice", "/ˈæp.əl ˌdʒuːs/", "Nước táo"),
+    makeWord("Food and Drinks", "Milkshake", "/ˈmɪlk.ʃeɪk/", "Sữa lắc"),
+    makeWord("Food and Drinks", "Coffee", "/ˈkɑː.fi/", "Cà phê"),
+    makeWord("Food and Drinks", "Yogurt", "/ˈjoʊ.ɡɚt/", "Sữa chua"),
+    makeWord("Food and Drinks", "Soda", "/ˈsoʊ.də/", "Nước ngọt có ga"),
+    makeWord("Food and Drinks", "Smoothie", "/ˈsmuː.ði/", "Sinh tố"),
+    makeWord("Food and Drinks", "Strawberry juice", "/ˈstrɑːˌber.i ˌdʒuːs/", "Nước ép dâu"),
+    makeWord("Food and Drinks", "Watermelon juice", "/ˈwɔː.t̬ɚˌmel.ən ˌdʒuːs/", "Nước ép dưa hấu")
+],
+
+
+Weather: [
+    makeWord("Weather", "Sunny", "/ˈsʌni/", "Có nắng"),
+    makeWord("Weather", "Rainy", "/ˈreɪni/", "Có mưa"),
+    makeWord("Weather", "Cloudy", "/ˈklaʊdi/", "Nhiều mây"),
+    makeWord("Weather", "Windy", "/ˈwɪndi/", "Có gió"),
+    makeWord("Weather", "Snowy", "/ˈsnoʊi/", "Có tuyết"),
+    makeWord("Weather", "Stormy", "/ˈstɔːrmi/", "Có bão"),
+    makeWord("Weather", "Foggy", "/ˈfɑːɡi/", "Có sương mù"),
+    makeWord("Weather", "Hot", "/hɑːt/", "Nóng"),
+    makeWord("Weather", "Cold", "/koʊld/", "Lạnh"),
+    makeWord("Weather", "Warm", "/wɔːrm/", "Ấm"),
+    makeWord("Weather", "Cool", "/kuːl/", "Mát"),
+    makeWord("Weather", "Dry", "/draɪ/", "Khô ráo"),
+    makeWord("Weather", "Wet", "/wet/", "Ướt"),
+    makeWord("Weather", "Rainbow", "/ˈreɪnboʊ/", "Cầu vồng"),
+    makeWord("Weather", "Thunder", "/ˈθʌndər/", "Tiếng sấm"),
+],
+
+Transportation: [
+    makeWord("Transportation", "Car", "/kɑːr/", "Ô tô"),
+    makeWord("Transportation", "Bus", "/bʌs/", "Xe buýt"),
+    makeWord("Transportation", "Bicycle", "/ˈbaɪsɪkəl/", "Xe đạp"),
+    makeWord("Transportation", "Motorcycle", "/ˈmoʊtərsaɪkəl/", "Xe máy"),
+    makeWord("Transportation", "Train", "/treɪn/", "Tàu hỏa"),
+    makeWord("Transportation", "Airplane", "/ˈerpleɪn/", "Máy bay"),
+    makeWord("Transportation", "Boat", "/boʊt/", "Thuyền"),
+    makeWord("Transportation", "Ship", "/ʃɪp/", "Tàu thủy"),
+    makeWord("Transportation", "Taxi", "/ˈtæksi/", "Xe taxi"),
+    makeWord("Transportation", "Helicopter", "/ˈhelɪkɑːptər/", "Trực thăng"),
+    makeWord("Transportation", "Truck", "/trʌk/", "Xe tải"),
+    makeWord("Transportation", "Van", "/væn/", "Xe tải nhỏ"),
+    makeWord("Transportation", "Subway", "/ˈsʌbweɪ/", "Tàu điện ngầm"),
+    makeWord("Transportation", "Ambulance", "/ˈæmbjələns/", "Xe cứu thương"),
+],
+
+Fruits: [
+    makeWord("Fruits", "Apple", "/ˈæpəl/", "Táo"),
+    makeWord("Fruits", "Banana", "/bəˈnænə/", "Chuối"),
+    makeWord("Fruits", "Orange", "/ˈɔːrɪndʒ/", "Cam"),
+    makeWord("Fruits", "Watermelon", "/ˈwɔːtərmelən/", "Dưa hấu"),
+    makeWord("Fruits", "Strawberry", "/ˈstrɔːberi/", "Dâu tây"),
+    makeWord("Fruits", "Mango", "/ˈmæŋɡoʊ/", "Xoài"),
+    makeWord("Fruits", "Pineapple", "/ˈpaɪnæpəl/", "Dứa"),
+    makeWord("Fruits", "Grape", "/ɡreɪp/", "Nho"),
+    makeWord("Fruits", "Pear", "/per/", "Lê"),
+    makeWord("Fruits", "Peach", "/piːtʃ/", "Đào"),
+    makeWord("Fruits", "Coconut", "/ˈkoʊkənʌt/", "Dừa"),
+    makeWord("Fruits", "Papaya", "/pəˈpaɪə/", "Đu đủ"),
+    makeWord("Fruits", "Cherry", "/ˈtʃeri/", "Anh đào"),
+    makeWord("Fruits", "Lemon", "/ˈlemən/", "Chanh vàng"),
+    makeWord("Fruits", "Kiwi", "/ˈkiːwiː/", "Kiwi"),
+]
+};
+
+
+// ==========================================
+// 3. GLOBAL VARIABLES
+// ==========================================
+
+let currentTopic = "Color";
+let currentQuestion = null;
+let currentGame = "";
+let points = 0;
+let locked = false;
+
+const allWords = () => Object.values(vocabulary).flat();
+
+const shuffle = arr => {
+    const result = [...arr];
+
+    for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+    }
+
+    return result;
+};
+
+const randomWord = () => {
+    const words = allWords();
+    return words[Math.floor(Math.random() * words.length)];
+};
+
+function normalizeWord(word) {
+    return word.toLowerCase().replace(/[^a-z]/g, "");
+}
+
+
+// ==========================================
+// 4. IMAGE DISPLAY
+// ==========================================
+
+function imageHTML(item, alt = "Vocabulary photo") {
+
+    const safeUrl = item.imageUrl.replace(/"/g, "&quot;");
+
+    return `
+        <div class="vocabulary-image">
+
+            <img
+                src="${safeUrl}"
+                alt="${alt}"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                onerror="
+                    this.style.display='none';
+                    this.nextElementSibling.style.display='flex';
+                "
+            >
+
+            <div class="image-fallback">
+                <span style="font-size:14px">
+                    Image unavailable
+                </span>
+            </div>
+
+        </div>
+    `;
+}
+
+
+// ==========================================
+// 5. MAIN MENU
+// ==========================================
+
+function showPage(page) {
+
+    document.querySelectorAll(".page").forEach(p => {
+        p.classList.remove("active");
+    });
+
+    document.getElementById(page).classList.add("active");
+
+    document.querySelectorAll(".nav-btn").forEach(button => {
+        button.classList.remove("active");
+
+        if (button.getAttribute("onclick").includes(page)) {
+            button.classList.add("active");
+        }
+    });
+}
+
+
+// ==========================================
+// 6. VOCABULARY
+// ==========================================
+
+function showTopic(topic) {
+
+    currentTopic = topic;
+
+    const container = document.getElementById("vocabulary");
+
+    container.innerHTML = vocabulary[topic].map(item => `
+        <div class="card">
+
+            ${imageHTML(item, item.word)}
+
+            <div class="word">${item.word}</div>
+            <div class="ipa">${item.ipa}</div>
+
+            <button onclick='speak(${JSON.stringify(item.word)})'>
+                🔊 Listen
+            </button>
+
+            <div class="meaning">${item.meaning}</div>
+
+        </div>
+    `).join("");
+}
+
+
+// ==========================================
+// 7. PRONUNCIATION
+// ==========================================
+
+function speak(word) {
+
+    if (!("speechSynthesis" in window)) {
+        alert("Your browser does not support pronunciation.");
+        return;
+    }
+
+    const speech = new SpeechSynthesisUtterance(word);
+
+    speech.lang = "en-US";
+    speech.rate = 0.85;
+
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(speech);
+}
+
+
+// ==========================================
+// 8. POINTS SYSTEM
+// ==========================================
+
+function addPoints(number) {
+
+    points += number;
+
+    document.getElementById("points").innerText = points;
+}
+
+function showFeedback(message, correct) {
+
+    const result = document.getElementById("feedback");
+
+    if (!result) return;
+
+    result.innerText = message;
+    result.style.color = correct ? "green" : "red";
+}
+
+
+// ==========================================
+// 8.1. WORDQUEST SOUND EFFECTS
+// ==========================================
+
+let soundContext = null;
+
+function playSound(notes, options = {}) {
+
+    const AudioContextClass =
+        window.AudioContext || window.webkitAudioContext;
+
+    if (!AudioContextClass) return;
+
+    try {
+
+        if (!soundContext) {
+            soundContext = new AudioContextClass();
+        }
+
+        const play = async () => {
+
+            if (soundContext.state === "suspended") {
+                await soundContext.resume();
+            }
+
+            const interval = options.interval ?? 0.13;
+            const duration = options.duration ?? 0.22;
+            const volume = options.volume ?? 0.12;
+            const type = options.type ?? "sine";
+
+            notes.forEach((frequency, index) => {
+
+                const oscillator = soundContext.createOscillator();
+                const gain = soundContext.createGain();
+
+                const startTime =
+                    soundContext.currentTime + 0.03 + index * interval;
+
+                oscillator.type = type;
+
+                oscillator.frequency.setValueAtTime(
+                    frequency,
+                    startTime
+                );
+
+                gain.gain.setValueAtTime(0.0001, startTime);
+
+                gain.gain.exponentialRampToValueAtTime(
+                    volume,
+                    startTime + 0.025
+                );
+
+                gain.gain.exponentialRampToValueAtTime(
+                    0.0001,
+                    startTime + duration
+                );
+
+                oscillator.connect(gain);
+                gain.connect(soundContext.destination);
+
+                oscillator.start(startTime);
+                oscillator.stop(startTime + duration + 0.03);
+
+            });
+        };
+
+        play().catch(error => {
+            console.warn("Audio playback error:", error);
+        });
+
+    } catch (error) {
+        console.warn("Audio unavailable:", error);
+    }
+}
+
+
+// CORRECT SOUND
+function playCorrectSound() {
+
+    playSound(
+        [523.25, 659.25, 783.99],
+        {
+            interval: 0.12,
+            duration: 0.2,
+            volume: 0.13,
+            type: "sine"
+        }
+    );
+}
+
+
+// WRONG SOUND
+function playWrongSound() {
+
+    playSound(
+        [392, 293.66, 220],
+        {
+            interval: 0.18,
+            duration: 0.25,
+            volume: 0.15,
+            type: "triangle"
+        }
+    );
+}
+
+
+// CELEBRATION SOUND
+function playCelebrationSound() {
+
+    playSound(
+        [523.25, 659.25, 783.99, 1046.50, 1318.51],
+        {
+            interval: 0.16,
+            duration: 0.3,
+            volume: 0.14,
+            type: "sine"
+        }
+    );
+}
+
+
+// ==========================================
+// 9. MINI GAMES MENU
+// ==========================================
+
+function startGame(game) {
+
+    currentGame = game;
+
+    document.getElementById("gameMenu").classList.add("hidden");
+    document.getElementById("gameArea").classList.remove("hidden");
+
+    nextQuestion();
+}
+
+function backToGames() {
+
+    document.getElementById("gameArea").classList.add("hidden");
+    document.getElementById("gameMenu").classList.remove("hidden");
+
+    window.matchData = null;
+    window.searchWords = [];
+    window.foundWords = [];
+    window.selectedCells = [];
+}
+
+function nextQuestion() {
+
+    locked = false;
+
+    const games = {
+        picture: pictureQuiz,
+        missing: missingLetters,
+        puzzle: wordPuzzle,
+        choice: multipleChoice,
+        matching: matchingGame,
+        wordsearch: wordSearch
+    };
+
+    if (games[currentGame]) {
+        games[currentGame]();
+    }
+}
+
+
+// ==========================================
+// 10. RANDOM ANSWER OPTIONS
+// ==========================================
+
+function getOptions() {
+
+    const correct = currentQuestion;
+
+    const wrongAnswers = shuffle(
+        allWords().filter(item => item !== correct)
+    ).slice(0, 3);
+
+    return shuffle([correct, ...wrongAnswers]);
+}
+
+
+// ==========================================
+// 11. PICTURE QUIZ
+// ==========================================
+
+function pictureQuiz() {
+
+    currentQuestion = randomWord();
+
+    const options = getOptions();
+
+    document.getElementById("gameContent").innerHTML = `
+
+        <h2>🖼️ Picture Quiz</h2>
+
+        <div class="game-picture">
+            ${imageHTML(currentQuestion, "Question picture")}
+        </div>
+
+        <p>What is this in English?</p>
+
+        <div class="game-options">
+
+            ${options.map((item, i) => `
+                <button onclick="checkChoice(${i})">
+                    ${item.word}
+                </button>
+            `).join("")}
+
+        </div>
+
+        <div id="feedback" class="feedback"></div>
+
+        <button onclick="nextQuestion()">Next Question →</button>
+
+    `;
+
+    window.gameOptions = options;
+}
+
+
+// ==========================================
+// 12. MISSING LETTERS
+// ==========================================
+
+function missingLetters() {
+
+    currentQuestion = randomWord();
+
+    const word = currentQuestion.word.toUpperCase();
+
+    const hiddenWord = [...word].map((letter, i) => {
+
+        if (letter === " ") return " ";
+
+        return i % 2 === 0 ? letter : "_";
+
+    }).join(" ");
+
+    const options = getOptions();
+
+    document.getElementById("gameContent").innerHTML = `
+
+        <h2>✏️ Missing Letters</h2>
+
+        <div class="game-picture">
+            ${imageHTML(currentQuestion, "Question picture")}
+        </div>
+
+        <h2>${hiddenWord}</h2>
+
+        <p>Choose the complete word.</p>
+
+        <div class="game-options">
+
+            ${options.map((item, i) => `
+                <button onclick="checkChoice(${i})">
+                    ${item.word}
+                </button>
+            `).join("")}
+
+        </div>
+
+        <div id="feedback" class="feedback"></div>
+
+        <button onclick="nextQuestion()">Next Word →</button>
+
+    `;
+
+    window.gameOptions = options;
+}
+
+
+// ==========================================
+// 13. MULTIPLE CHOICE
+// ==========================================
+
+function multipleChoice() {
+
+    currentQuestion = randomWord();
+
+    const options = getOptions();
+
+    document.getElementById("gameContent").innerHTML = `
+
+        <h2>❓ Multiple Choice</h2>
+
+        <h3>${currentQuestion.meaning}</h3>
+
+        <p>Choose the correct English word.</p>
+
+        <div class="game-options">
+
+            ${options.map((item, i) => `
+                <button onclick="checkChoice(${i})">
+                    ${item.word}
+                </button>
+            `).join("")}
+
+        </div>
+
+        <div id="feedback" class="feedback"></div>
+
+        <button onclick="nextQuestion()">Next Question →</button>
+
+    `;
+
+    window.gameOptions = options;
+}
+
+
+// ==========================================
+// 14. CHECK MULTIPLE CHOICE ANSWER
+// ==========================================
+
+function checkChoice(index) {
+
+    if (locked) return;
+
+    locked = true;
+
+    const buttons = document.querySelectorAll(".game-options button");
+
+    buttons.forEach(button => {
+        button.disabled = true;
+    });
+
+    if (window.gameOptions[index] === currentQuestion) {
+
+        buttons[index].classList.add("correct");
+
+        playCorrectSound();
+
+        showFeedback(
+            "🎉 Correct! +10 points!",
+            true
+        );
+
+        addPoints(10);
+
+    } else {
+
+        buttons[index].classList.add("wrong");
+
+        playWrongSound();
+
+        const correctIndex =
+            window.gameOptions.indexOf(currentQuestion);
+
+        buttons[correctIndex].classList.add("correct");
+
+        showFeedback(
+            "❌ Incorrect! Answer: " + currentQuestion.word,
+            false
+        );
+    }
+}
+
+
+// ==========================================
+// 15. WORD PUZZLE
+// ==========================================
+
+function wordPuzzle() {
+
+    currentQuestion = randomWord();
+
+    const letters = shuffle(
+        normalizeWord(currentQuestion.word).toUpperCase().split("")
+    );
+
+    document.getElementById("gameContent").innerHTML = `
+
+        <h2>🧩 Word Puzzle</h2>
+
+        <div class="game-picture">
+            ${imageHTML(currentQuestion, "Question picture")}
+        </div>
+
+        <h3>${currentQuestion.meaning}</h3>
+
+        <div style="
+            font-size:25px;
+            letter-spacing:8px;
+            color:#4968e8;
+            margin:20px;
+        ">
+            ${letters.join(" ")}
+        </div>
+
+        <input
+            id="puzzleAnswer"
+            class="game-input"
+            placeholder="Type the correct word"
+            onkeydown="if(event.key === 'Enter') checkPuzzle()"
+        >
+
+        <div id="feedback" class="feedback"></div>
+
+        <button onclick="checkPuzzle()">Check Answer</button>
+
+        <button onclick="nextQuestion()">Next Word →</button>
+
+    `;
+}
+
+function checkPuzzle() {
+
+    if (locked) return;
+
+    const answer = normalizeWord(
+        document.getElementById("puzzleAnswer").value
+    );
+
+    const correctAnswer = normalizeWord(currentQuestion.word);
+
+    if (!answer) {
+
+        showFeedback(
+            "Please enter your answer!",
+            false
+        );
+
+        return;
+    }
+
+    if (answer === correctAnswer) {
+
+        locked = true;
+
+        playCorrectSound();
+
+        showFeedback(
+            "🎉 Excellent! +10 points!",
+            true
+        );
+
+        addPoints(10);
+
+    } else {
+
+        playWrongSound();
+
+        showFeedback(
+            "❌ Try again!",
+            false
+        );
+    }
+}
+
+
+// ==========================================
+// 16. MATCHING GAME
+// ==========================================
+
+function matchingGame() {
+
+    const words = shuffle(allWords()).slice(0, 5);
+
+    const meanings = shuffle(
+        words.map((item, index) => ({
+            meaning: item.meaning,
+            wordIndex: index
+        }))
+    );
+
+    window.matchData = {
+        words,
+        meanings,
+        selectedWord: null,
+        matched: [],
+        completed: 0
+    };
+
+    document.getElementById("gameContent").innerHTML = `
+
+        <h2>🔗 Matching Game</h2>
+
+        <p>Match the English words with their Vietnamese meanings.</p>
+
+        <div class="match-grid">
+
+            <div id="englishWords">
+
+                ${words.map((item, i) => `
+                    <button
+                        id="word-${i}"
+                        onclick="selectMatch(${i}, 'word')"
+                    >
+                        ${item.word}
+                    </button>
+                `).join("")}
+
+            </div>
+
+            <div id="vietnameseWords">
+
+                ${meanings.map((item, i) => `
+                    <button
+                        id="meaning-${i}"
+                        onclick="selectMatch(${i}, 'meaning')"
+                    >
+                        ${item.meaning}
+                    </button>
+                `).join("")}
+
+            </div>
+
+        </div>
+
+        <div id="feedback" class="feedback">
+            Matched: 0 / 5
+        </div>
+
+        <button onclick="nextQuestion()">New Game →</button>
+
+    `;
+}
+
+function selectMatch(index, type) {
+
+    const data = window.matchData;
+
+    if (!data) return;
+
+    if (type === "word") {
+
+        if (data.matched.includes(index)) return;
+
+        data.selectedWord = index;
+
+        document.querySelectorAll("#englishWords button")
+            .forEach(button =>
+                button.classList.remove("selected")
+            );
+
+        document.getElementById("word-" + index)
+            .classList.add("selected");
+
+        return;
+    }
+
+    if (data.selectedWord === null) return;
+
+    const wordIndex = data.selectedWord;
+
+    const selectedMeaning = data.meanings[index];
+
+    const wordButton =
+        document.getElementById("word-" + wordIndex);
+
+    const meaningButton =
+        document.getElementById("meaning-" + index);
+
+    if (selectedMeaning.wordIndex === wordIndex) {
+
+        data.matched.push(wordIndex);
+
+        data.completed++;
+
+        wordButton.disabled = true;
+        meaningButton.disabled = true;
+
+        wordButton.classList.remove("selected");
+
+        wordButton.classList.add("matched");
+        meaningButton.classList.add("matched");
+
+        addPoints(5);
+
+        if (data.completed === 5) {
+
+            playCelebrationSound();
+
+            showFeedback(
+                "🏆 Congratulations! All pairs matched!",
+                true
+            );
+
+        } else {
+
+            playCorrectSound();
+
+            showFeedback(
+                `🎉 Correct! ${data.completed}/5 matched. +5 points`,
+                true
+            );
+        }
+
+    } else {
+
+        playWrongSound();
+
+        showFeedback(
+            "❌ Incorrect match. Try again!",
+            false
+        );
+
+        wordButton.classList.remove("selected");
+    }
+
+    data.selectedWord = null;
+}
+
+
+// ==========================================
+// 17. WORD SEARCH
+// ==========================================
+
+function wordSearch() {
+
+    // Remove duplicate words so the puzzle has unique answers.
+    const uniqueWords = [...new Map(
+        allWords()
+            .filter(item => normalizeWord(item.word).length <= 8)
+            .map(item => [normalizeWord(item.word), item])
+    ).values()];
+
+    const words = shuffle(uniqueWords)
+        .slice(0, 4)
+        .map(item => normalizeWord(item.word).toUpperCase());
+
+    const size = 8;
+
+    const grid = Array.from(
+        { length: size },
+        () => Array(size).fill("")
+    );
+
+    words.forEach((word, i) => {
+
+        [...word].forEach((letter, j) => {
+            grid[i * 2][j] = letter;
+        });
+
+    });
+
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    grid.forEach(row => {
+
+        row.forEach((letter, i) => {
+
+            if (!letter) {
+                row[i] = alphabet[
+                    Math.floor(Math.random() * alphabet.length)
+                ];
+            }
+
+        });
+
+    });
+
+    window.searchWords = words;
+    window.foundWords = [];
+    window.selectedCells = [];
+
+    document.getElementById("gameContent").innerHTML = `
+
+        <h2>🔎 Word Search</h2>
+
+        <p>Find these words in the grid:</p>
+
+        <h3>${words.join(" | ")}</h3>
+
+        <div class="word-grid">
+
+            ${grid.flat().map((letter, i) => `
+                <button onclick="selectLetter(${i}, '${letter}')">
+                    ${letter}
+                </button>
+            `).join("")}
+
+        </div>
+
+        <div id="feedback" class="feedback">
+            Found: 0 / ${words.length}
+        </div>
+
+        <button onclick="clearSelection()">Clear Selection</button>
+
+        <button onclick="nextQuestion()">New Puzzle →</button>
+
+    `;
+}
+
+function clearSelection() {
+
+    window.selectedCells = [];
+
+    document.querySelectorAll(".word-grid button").forEach(button => {
+        button.classList.remove("selected");
+    });
+}
+
+function selectLetter(index, letter) {
+
+    if (!window.selectedCells || !window.searchWords) return;
+
+    const selected = window.selectedCells;
+
+    const buttons = document.querySelectorAll(".word-grid button");
+
+    if (!buttons[index] || buttons[index].disabled) return;
+
+    const row = Math.floor(index / 8);
+
+    const previousRow = selected.length
+        ? Math.floor(selected[selected.length - 1].index / 8)
+        : row;
+
+    if (
+        selected.length &&
+        (
+            row !== previousRow ||
+            index !== selected[selected.length - 1].index + 1
+        )
+    ) {
+
+        clearSelection();
+        return;
+    }
+
+    if (selected.some(cell => cell.index === index)) return;
+
+    selected.push({ index, letter });
+
+    buttons[index].classList.add("selected");
+
+    const answer = selected.map(cell => cell.letter).join("");
+
+    if (
+        window.searchWords.includes(answer) &&
+        !window.foundWords.includes(answer)
+    ) {
+
+        window.foundWords.push(answer);
+
+        selected.forEach(cell => {
+
+            buttons[cell.index].disabled = true;
+
+            buttons[cell.index].classList.remove("selected");
+
+            buttons[cell.index].classList.add("found");
+
+        });
+
+        addPoints(10);
+
+        selected.length = 0;
+
+        if (
+            window.foundWords.length === window.searchWords.length
+        ) {
+
+            playCelebrationSound();
+
+            showFeedback(
+                "🏆 Congratulations! You found all words!",
+                true
+            );
+
+        } else {
+
+            playCorrectSound();
+
+            showFeedback(
+                `🎉 Found ${answer}! +10 points!`,
+                true
+            );
+        }
+
+        return;
+    }
+
+    const possible = window.searchWords.some(word =>
+        word.startsWith(answer)
+    );
+
+    if (!possible) {
+
+        playWrongSound();
+
+        showFeedback(
+            "❌ Not a word! Try again!",
+            false
+        );
+
+        clearSelection();
+    }
+}
+
+
+// ==========================================
+// 18. START WORDQUEST
+// ==========================================
+
+showTopic("Color");
+
+</script>
+
+</body>
+</html>
